@@ -23,7 +23,11 @@ const THIRD_PARTY_SPLIT = process.env.THIRD_PARTY_SPLIT
 const UPFRONT_COST = process.env.UPFRONT_COST
 const PERIOD_HRS = process.env.PERIOD_HRS
 const PERIOD_SECS = PERIOD_HRS * 60 * 60
-
+const ALCHEMICA_FUD_ADDRESS = '0x403E967b044d4Be25170310157cB1A4Bf10bdD0f'
+const ALCHEMICA_FOMO_ADDRESS = '0x44A6e0BE76e1D9620A7F76588e4509fE4fa8E8C8'
+const ALCHEMICA_ALPHA_ADDRESS = '0x6a3E7C3c6EF65Ee26975b12293cA1AAD7e1dAeD2'
+const ALCHEMICA_KEK_ADDRESS = '0x42E5E06EF5b90Fe15F853F59299Fc96259209c5C'
+const REVENUE_TOKENS = [ALCHEMICA_FUD_ADDRESS, ALCHEMICA_FOMO_ADDRESS, ALCHEMICA_ALPHA_ADDRESS, ALCHEMICA_KEK_ADDRESS]
 
 const MAX_LENDINGS = 2
 
@@ -60,10 +64,10 @@ const getCurrentGasPrices = () => new Promise((resolve, reject) => {
   })
 })
 
-const createAddLendingTransaction = async (tokenId, initialCost = UPFRONT_COST, periodSeconds = PERIOD_SECS, revenueSplit = [BORROWER_SPLIT, OWNER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = ORIGINAL_OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID) => ({
+const createAddLendingTransaction = async (tokenId, initialCost = UPFRONT_COST, periodSeconds = PERIOD_SECS, revenueSplit = [BORROWER_SPLIT, OWNER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = ORIGINAL_OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => ({
   from: LENDER_WALLET_ADDRESS,
   to: AAVEGOTCHI_DIAMOND_ADDRESS,
-  data: contract.methods.addGotchiLending(tokenId, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId).encodeABI()
+  data: contract.methods.addGotchiLending(tokenId, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens).encodeABI()
 })
 
 const createEndLendingTransaction = async (tokenId) => ({
