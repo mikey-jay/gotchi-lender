@@ -74,7 +74,7 @@ const createAddLendingTransaction = async (tokenId, initialCost = UPFRONT_COST_W
 const createEndLendingTransaction = async (tokenId) => ({
   from: LENDER_WALLET_ADDRESS,
   to: AAVEGOTCHI_DIAMOND_ADDRESS,
-  data: contract.methods.claimAndEndGotchingLending(tokenId).encodeABI()
+  data: contract.methods.claimAndEndGotchiLending(tokenId).encodeABI()
 })
 
 const setTransactionGasToMarket = async (tx) => Object.assign({
