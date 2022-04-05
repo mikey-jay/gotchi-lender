@@ -42,7 +42,7 @@ const contract = new web3.eth.Contract(ABI, AAVEGOTCHI_DIAMOND_ADDRESS)
 
 const STATUS_AGREED = web3.utils.asciiToHex("agreed")
 const STATUS_LISTED = web3.utils.asciiToHex("listed")
-const UPFRONT_COST_WEI = web3.utils.BigNumber.from(UPFRONT_COST_GHST * 10 ** 18)
+const UPFRONT_COST_WEI = web3.utils.toWei(UPFRONT_COST_GHST)
 
 const convertGweiToWei = (gwei) => gwei * (10 ** 9)
 const convertWeiToMatic = (wei) => wei / (10 ** 18)
