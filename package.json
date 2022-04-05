@@ -1,0 +1,21 @@
+{
+  "name": "gotchi-lender",
+  "version": "1.0.0",
+  "description": "Script for lending aavegotchis",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "aavegotchi",
+    "gotchi",
+    "lending"
+  ],
+  "author": "MikeyJay",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "https": "^1.0.0",
+    "web3": "^1.7.1"
+  }
+}
