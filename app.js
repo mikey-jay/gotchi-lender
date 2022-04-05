@@ -21,7 +21,6 @@ const OWNER_SPLIT = parseFloat(process.env.OWNER_SPLIT) || 0
 const BORROWER_SPLIT = parseFloat(process.env.BORROWER_SPLIT) || 0
 const THIRD_PARTY_SPLIT = parseFloat(process.env.THIRD_PARTY_SPLIT) || 0
 const UPFRONT_COST_GHST = parseFloat(process.env.UPFRONT_COST) || 0
-const UPFRONT_COST_WEI = UPFRONT_COST_GHST * 10 ** 18
 const PERIOD_HRS = parseFloat(process.env.PERIOD_HRS) || 1
 const PERIOD_SECS = PERIOD_HRS * 60 * 60
 const ALCHEMICA_FUD_ADDRESS = '0x403E967b044d4Be25170310157cB1A4Bf10bdD0f'
@@ -65,7 +64,7 @@ const getCurrentGasPrices = () => new Promise((resolve, reject) => {
   })
 })
 
-const createAddLendingTransaction = async (tokenId, initialCost = UPFRONT_COST_WEI, periodSeconds = PERIOD_SECS, revenueSplit = [BORROWER_SPLIT, OWNER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = ORIGINAL_OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => ({
+const createAddLendingTransaction = async (tokenId, initialCost = UPFRONT_COST_GHST, periodSeconds = PERIOD_SECS, revenueSplit = [BORROWER_SPLIT, OWNER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = ORIGINAL_OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => ({
   from: LENDER_WALLET_ADDRESS,
   to: AAVEGOTCHI_DIAMOND_ADDRESS,
   data: contract.methods.addGotchiLending(tokenId, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens).encodeABI()
