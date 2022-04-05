@@ -15,12 +15,12 @@ const AAVEGOTCHI_DIAMOND_ADDRESS = "0x86935F11C86623deC8a25696E1C19a8659CbF95d"
 const LENDER_WALLET_ADDRESS = process.env.LENDER_WALLET_ADDRESS
 const LENDER_WALLET_KEY = process.env.LENDER_WALLET_KEY
 const WHITELIST_ID = parseInt(process.env.WHITELIST_ID) || 0
-const ORIGINAL_OWNER_WALLET_ADDRESS = process.env.ORIGINAL_OWNER_WALLET_ADDRESS
+const ORIGINAL_OWNER_WALLET_ADDRESS = process.env.ORIGINAL_OWNER_WALLET_ADDRESS || LENDER_WALLET_ADDRESS
 const THIRD_PARTY_WALLET_ADDRESS = process.env.THIRD_PARTY_WALLET_ADDRESS
-const OWNER_SPLIT = parseFloat(process.env.OWNER_SPLIT)
-const BORROWER_SPLIT = parseFloat(process.env.BORROWER_SPLIT)
-const THIRD_PARTY_SPLIT = parseFloat(process.env.THIRD_PARTY_SPLIT)
-const UPFRONT_COST_GHST = parseInt(process.env.UPFRONT_COST)
+const OWNER_SPLIT = parseFloat(process.env.OWNER_SPLIT) || 0
+const BORROWER_SPLIT = parseFloat(process.env.BORROWER_SPLIT) || 0
+const THIRD_PARTY_SPLIT = parseFloat(process.env.THIRD_PARTY_SPLIT) || 0
+const UPFRONT_COST_GHST = parseFloat(process.env.UPFRONT_COST) || 0
 const UPFRONT_COST_WEI = UPFRONT_COST_GHST * 10 ** 18
 const PERIOD_HRS = parseFloat(process.env.PERIOD_HRS) || 1
 const PERIOD_SECS = PERIOD_HRS * 60 * 60
@@ -74,7 +74,7 @@ const createAddLendingTransaction = async (tokenId, initialCost = UPFRONT_COST_W
 const createEndLendingTransaction = async (tokenId) => ({
   from: LENDER_WALLET_ADDRESS,
   to: AAVEGOTCHI_DIAMOND_ADDRESS,
-  data: contract.methods.addGotchiLending(tokenId).encodeABI()
+  data: contract.methods.claimAndEndGotchingLending(tokenId).encodeABI()
 })
 
 const setTransactionGasToMarket = async (tx) => Object.assign({
