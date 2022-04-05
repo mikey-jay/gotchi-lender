@@ -16,12 +16,12 @@ const LENDER_WALLET_ADDRESS = process.env.LENDER_WALLET_ADDRESS
 const LENDER_WALLET_KEY = process.env.LENDER_WALLET_KEY
 const WHITELIST_ID = parseInt(process.env.WHITELIST_ID) || 0
 const ORIGINAL_OWNER_WALLET_ADDRESS = process.env.ORIGINAL_OWNER_WALLET_ADDRESS || LENDER_WALLET_ADDRESS
-const THIRD_PARTY_WALLET_ADDRESS = process.env.THIRD_PARTY_WALLET_ADDRESS
+const THIRD_PARTY_WALLET_ADDRESS = process.env.THIRD_PARTY_WALLET_ADDRESS || "0x0000000000000000000000000000000000000000"
 const OWNER_SPLIT = parseFloat(process.env.OWNER_SPLIT) || 0
 const BORROWER_SPLIT = parseFloat(process.env.BORROWER_SPLIT) || 0
 const THIRD_PARTY_SPLIT = parseFloat(process.env.THIRD_PARTY_SPLIT) || 0
 const UPFRONT_COST_GHST = process.env.UPFRONT_COST || "0"
-const PERIOD_HRS = parseFloat(process.env.PERIOD_HRS) || 1
+const PERIOD_HRS = parseFloat(process.env.PERIOD_HRS)
 const PERIOD_SECS = PERIOD_HRS * 60 * 60
 const ALCHEMICA_FUD_ADDRESS = '0x403E967b044d4Be25170310157cB1A4Bf10bdD0f'
 const ALCHEMICA_FOMO_ADDRESS = '0x44A6e0BE76e1D9620A7F76588e4509fE4fa8E8C8'
@@ -65,7 +65,7 @@ const getCurrentGasPrices = () => new Promise((resolve, reject) => {
   })
 })
 
-const createAddLendingTransaction = async (tokenId, initialCost = UPFRONT_COST_WEI, periodSeconds = PERIOD_SECS, revenueSplit = [BORROWER_SPLIT, OWNER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = ORIGINAL_OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => ({
+const createAddLendingTransaction = async (tokenId, initialCost = UPFRONT_COST_WEI, periodSeconds = PERIOD_SECS, revenueSplit = [OWNER_SPLIT, BORROWER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = ORIGINAL_OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => ({
   from: LENDER_WALLET_ADDRESS,
   to: AAVEGOTCHI_DIAMOND_ADDRESS,
   data: contract.methods.addGotchiLending(tokenId, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens).encodeABI()
