@@ -14,9 +14,9 @@ A dockerfile is included if you want to run the script inside a Docker container
 
 Build the image (from project root):
 ```
-docker build -t gotchi-petter .
+docker build -t gotchi-lender .
 ```
 Run the container
 ```
-docker run -d --restart unless-stopped gotchi-petter
+docker run -d --restart unless-stopped gotchi-lender
 ```
