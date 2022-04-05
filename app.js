@@ -42,6 +42,7 @@ const contract = new web3.eth.Contract(ABI, AAVEGOTCHI_DIAMOND_ADDRESS)
 
 const STATUS_AGREED = web3.utils.asciiToHex("agreed")
 const STATUS_LISTED = web3.utils.asciiToHex("listed")
+const UPFRONT_COST_WEI = web3.utils.BigNumber.from(UPFRONT_COST_GHST * 10 ** 18)
 
 const convertGweiToWei = (gwei) => gwei * (10 ** 9)
 const convertWeiToMatic = (wei) => wei / (10 ** 18)
@@ -64,7 +65,7 @@ const getCurrentGasPrices = () => new Promise((resolve, reject) => {
   })
 })
 
-const createAddLendingTransaction = async (tokenId, initialCost = UPFRONT_COST_GHST, periodSeconds = PERIOD_SECS, revenueSplit = [BORROWER_SPLIT, OWNER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = ORIGINAL_OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => ({
+const createAddLendingTransaction = async (tokenId, initialCost = UPFRONT_COST_WEI, periodSeconds = PERIOD_SECS, revenueSplit = [BORROWER_SPLIT, OWNER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = ORIGINAL_OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => ({
   from: LENDER_WALLET_ADDRESS,
   to: AAVEGOTCHI_DIAMOND_ADDRESS,
   data: contract.methods.addGotchiLending(tokenId, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens).encodeABI()
