@@ -1,5 +1,4 @@
 require('dotenv').config();
-const secrets = require('./secrets');
 
 // Can be 'safeLow', 'standard', or 'fast' - see: https://gasstation-mainnet.matic.network/v2
 const GAS_SPEED = 'standard'
