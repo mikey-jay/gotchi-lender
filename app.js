@@ -108,17 +108,17 @@ async function submitTransaction(tokenId, transactionFactory) {
   log(`Submitting ${transactionFactory.name} gotchi with id: ${tokenId}`)
 
   try {
-    var listLendingTransaction = await setTransactionGasToMarket(await transactionFactory(tokenId))
+    var transaction = await setTransactionGasToMarket(await transactionFactory(tokenId))
   } catch (err) {
     return Promise.reject(`Error creating transaction: ${err.message}`)
   }
-  log(`Creating ${transactionFactory.name} transaction: (tokenId=${tokenId}, from=${listLendingTransaction.from}, to=${listLendingTransaction.to}, gasLimit=${listLendingTransaction.gasLimit}, maxPriorityFeePerGas=${listLendingTransaction.maxPriorityFeePerGas})`)
-  const estimatedGasCostMatic = convertWeiToMatic(listLendingTransaction.gasLimit * (listLendingTransaction.maxPriorityFeePerGas + convertGweiToWei((await getCurrentGasPrices()).estimatedBaseFee)))
+  log(`Creating ${transactionFactory.name} transaction: (tokenId=${tokenId}, from=${transaction.from}, to=${transaction.to}, gasLimit=${transaction.gasLimit}, maxPriorityFeePerGas=${transaction.maxPriorityFeePerGas})`)
+  const estimatedGasCostMatic = convertWeiToMatic(transaction.gasLimit * (transaction.maxPriorityFeePerGas + convertGweiToWei((await getCurrentGasPrices()).estimatedBaseFee)))
   log("Estimated gas cost is ~" + estimatedGasCostMatic.toFixed(6) + " MATIC")
   if (estimatedGasCostMatic > GAS_COST_LIMIT_MATIC) {
     log('ABORTED: Estimated gas cost exceeds limit. GAS_COST_LIMIT_MATIC=' + GAS_COST_LIMIT_MATIC)
   } else {
-    return sendTransaction(await signTransaction(listLendingTransaction))
+    return sendTransaction(await signTransaction(transaction))
       .once('sending', notifySending)
       .once('sent', notifySent)
       .once('transactionHash', notifyHash)
