@@ -113,7 +113,7 @@ async function submitTransaction(tokenId, transactionFactory) {
   try {
     var transaction = await setTransactionGasToMarket(await transactionFactory(tokenId))
   } catch (err) {
-    return Promise.reject(`Error creating transaction: ${err.message}`)
+    return Promise.reject(err)
   }
   log(`Creating ${transactionFactory.name} transaction: (tokenId=${tokenId}, from=${transaction.from}, to=${transaction.to}, gasLimit=${transaction.gasLimit}, maxPriorityFeePerGas=${transaction.maxPriorityFeePerGas})`)
   const estimatedGasCostMatic = convertWeiToMatic(transaction.gasLimit * (transaction.maxPriorityFeePerGas + convertGweiToWei((await getCurrentGasPrices()).estimatedBaseFee)))
@@ -131,8 +131,8 @@ async function submitTransaction(tokenId, transactionFactory) {
   }
 }
 
-const listGotchiLending = (tokenId) => submitTransaction(tokenId, createAddLendingTransaction)
-const endGotchiLending = (tokenId) => submitTransaction(tokenId, createEndLendingTransaction)
+const listGotchiLending = (tokenId) => submitTransaction(tokenId, createAddLendingTransaction).catch((err) => log(`Error creating listing for gotchi ID ${tokenId}: ${err.message}`))
+const endGotchiLending = (tokenId) => submitTransaction(tokenId, createEndLendingTransaction).catch((err) => log(`Error ending lending for gotchi ID ${tokenId}: ${err.message}`))
 
 const loop = async () => {
   log(`Getting gotchis owned by ${LENDER_WALLET_ADDRESS}`)
