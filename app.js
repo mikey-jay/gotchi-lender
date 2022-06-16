@@ -16,8 +16,9 @@ const AAVEGOTCHI_DIAMOND_ADDRESS = "0x86935F11C86623deC8a25696E1C19a8659CbF95d"
 
 const LENDER_WALLET_ADDRESS = process.env.LENDER_WALLET_ADDRESS
 const LENDER_WALLET_KEY = process.env.LENDER_WALLET_KEY
+const GOTCHI_IDS = process.env.GOTCHI_IDS.split(",")
 const WHITELIST_ID = parseInt(process.env.WHITELIST_ID) || 0
-const ORIGINAL_OWNER_WALLET_ADDRESS = process.env.ORIGINAL_OWNER_WALLET_ADDRESS || LENDER_WALLET_ADDRESS
+const OWNER_WALLET_ADDRESS = process.env.ORIGINAL_OWNER_WALLET_ADDRESS || LENDER_WALLET_ADDRESS
 const THIRD_PARTY_WALLET_ADDRESS = process.env.THIRD_PARTY_WALLET_ADDRESS || "0x0000000000000000000000000000000000000000"
 const OWNER_SPLIT = parseFloat(process.env.OWNER_SPLIT) || 0
 const BORROWER_SPLIT = parseFloat(process.env.BORROWER_SPLIT) || 0
@@ -34,6 +35,10 @@ const REVENUE_TOKENS = [ALCHEMICA_FUD_ADDRESS, ALCHEMICA_FOMO_ADDRESS, ALCHEMICA
 const MAX_LENDINGS = 2
 
 const MILLISECONDS_BETWEEN_RETRIES = 1000 * 60 * 2 // 2 minutes
+
+const CANCEL_ONLY = process.argv.includes('--cancel')
+const END_ONLY = process.argv.includes('--end')
+const RUN_ONCE = process.argv.includes('--once') || CANCEL_ONLY || END_ONLY
 
 const getLogTimestamp = () => (new Date()).toISOString().substring(0,19)
 const log = (message) => console.log(`${getLogTimestamp()}: ${message}`)
@@ -67,17 +72,79 @@ const getCurrentGasPrices = () => new Promise((resolve, reject) => {
   })
 })
 
-const createAddLendingTransaction = async (tokenId, initialCost = UPFRONT_COST_WEI, periodSeconds = PERIOD_SECS, revenueSplit = [OWNER_SPLIT, BORROWER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = ORIGINAL_OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => ({
-  from: LENDER_WALLET_ADDRESS,
-  to: AAVEGOTCHI_DIAMOND_ADDRESS,
-  data: contract.methods.addGotchiLending(tokenId, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens).encodeABI()
-})
+const createAddLendingTransaction = async (tokenIds, initialCost = UPFRONT_COST_WEI, periodSeconds = PERIOD_SECS, revenueSplit = [OWNER_SPLIT, BORROWER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => {
+  if (tokenIds.length > 1)
+    return createBatchAddLendingTransaction(tokenIds, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens)
+  
+  return {
+    from: LENDER_WALLET_ADDRESS,
+    to: AAVEGOTCHI_DIAMOND_ADDRESS,
+    data: contract.methods.addGotchiLending(tokenIds[0], initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens).encodeABI()
+  }
+}
 
-const createEndLendingTransaction = async (tokenId) => ({
-  from: LENDER_WALLET_ADDRESS,
-  to: AAVEGOTCHI_DIAMOND_ADDRESS,
-  data: contract.methods.claimAndEndGotchiLending(tokenId).encodeABI()
-})
+const createBatchAddLendingTransaction = async (tokenIds, initialCost = UPFRONT_COST_WEI, periodSeconds = PERIOD_SECS, revenueSplit = [OWNER_SPLIT, BORROWER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => {
+  let args = tokenIds.map((t) => [t, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens])
+  return {
+    from: LENDER_WALLET_ADDRESS,
+    to: AAVEGOTCHI_DIAMOND_ADDRESS,
+    data: contract.methods.batchAddGotchiListing(args).encodeABI()
+  }
+}
+
+const createRelistLendingTransaction = async (tokenIds) => {
+  if (tokenIds.length > 1)
+    return createBatchRelistLendingTransaction(tokenIds)
+  return {
+    from: LENDER_WALLET_ADDRESS,
+    to: AAVEGOTCHI_DIAMOND_ADDRESS,
+    data: contract.methods.claimAndEndAndRelistGotchiLending(tokenIds[0]).encodeABI()
+  }
+}
+
+const createBatchRelistLendingTransaction = async (tokenIds) => {
+  return {
+    from: LENDER_WALLET_ADDRESS,
+    to: AAVEGOTCHI_DIAMOND_ADDRESS,
+    data: contract.methods.batchClaimAndEndAndRelistGotchiLending(tokenIds).encodeABI()
+  }
+}
+
+const createEndLendingTransaction = async (tokenIds) => {
+  if (tokenIds.length > 1)
+    return createBatchEndLendingTransaction(tokenIds)
+  return {
+    from: LENDER_WALLET_ADDRESS,
+    to: AAVEGOTCHI_DIAMOND_ADDRESS,
+    data: contract.methods.claimAndEndGotchiLending(tokenIds[0]).encodeABI()
+  }
+}
+
+const createBatchEndLendingTransaction = async (tokenIds) => {
+  return {
+    from: LENDER_WALLET_ADDRESS,
+    to: AAVEGOTCHI_DIAMOND_ADDRESS,
+    data: contract.methods.batchCancelGotchiLendingByToken(tokenIds).encodeABI()
+  }
+}
+
+const createCancelLendingTransaction = async (tokenIds) => {
+  if (tokenIds.length > 1)
+    return createBatchCancelLendingTransaction(tokenIds)
+  return {
+    from: LENDER_WALLET_ADDRESS,
+    to: AAVEGOTCHI_DIAMOND_ADDRESS,
+    data: contract.methods.cancelGotchiLendingByToken(tokenIds[0]).encodeABI()
+  }
+}
+
+const createBatchCancelLendingTransaction = async (tokenIds) => {
+  return {
+    from: LENDER_WALLET_ADDRESS,
+    to: AAVEGOTCHI_DIAMOND_ADDRESS,
+    data: contract.methods.batchClaimAndEndGotchiLending(tokenIds).encodeABI()
+  }
+}
 
 const setTransactionGasToMarket = async (tx) => Object.assign({
     gasLimit: await web3.eth.estimateGas(tx),
@@ -94,11 +161,11 @@ const notifyReceipt = (receipt) => log(`Obtained receipt for transaction (blockN
 const notifyComplete = (receipt) => log('Transaction complete.')
 const notifyError = (error) => Promise.reject(error)
 
-const getGotchisByOwner = (ownerAddress = LENDER_WALLET_ADDRESS) => contract.methods.allAavegotchisOfOwner(ownerAddress).call()
+const getGotchisByOwner = (ownerAddress = OWNER_WALLET_ADDRESS) => contract.methods.allAavegotchisOfOwner(ownerAddress).call()
 const getIdsFromGotchis = (gotchis) => gotchis.map((g) => g.tokenId)
 
-const getGotchiLendings = (ownerAddress = LENDER_WALLET_ADDRESS, status = STATUS_AGREED) => contract.methods.getOwnerGotchiLendings(ownerAddress, status, MAX_LENDINGS).call()
-const getGotchiLendingListings = (ownerAddress = LENDER_WALLET_ADDRESS) => getGotchiLendings(LENDER_WALLET_ADDRESS, STATUS_LISTED)
+const getGotchiLendings = (ownerAddress = OWNER_WALLET_ADDRESS, status = STATUS_AGREED) => contract.methods.getOwnerGotchiLendings(ownerAddress, status, MAX_LENDINGS).call()
+const getGotchiLendingListings = (ownerAddress = OWNER_WALLET_ADDRESS) => getGotchiLendings(OWNER_WALLET_ADDRESS, STATUS_LISTED)
 const getGotchiIdsFromLendings = (lendings) => lendings.map((l) => l.erc721TokenId)
 
 const isLoanPeriodExpired = (lending) => Math.floor(Date.now() / 1000) > parseInt(lending['timeAgreed']) + parseInt(lending['period'])
@@ -121,7 +188,7 @@ async function submitTransaction(tokenId, transactionFactory) {
   if (estimatedGasCostMatic > GAS_COST_LIMIT_MATIC) {
     log('ABORTED: Estimated gas cost exceeds limit. GAS_COST_LIMIT_MATIC=' + GAS_COST_LIMIT_MATIC)
   } else {
-    return sendTransaction(await signTransaction(transaction))
+    return await sendTransaction(await signTransaction(transaction))
       .once('sending', notifySending)
       .once('sent', notifySent)
       .once('transactionHash', notifyHash)
@@ -131,33 +198,59 @@ async function submitTransaction(tokenId, transactionFactory) {
   }
 }
 
-const listGotchiLending = (tokenId) => submitTransaction(tokenId, createAddLendingTransaction).catch((err) => log(`Error creating listing for gotchi ID ${tokenId}: ${err.message}`))
-const endGotchiLending = (tokenId) => submitTransaction(tokenId, createEndLendingTransaction).catch((err) => log(`Error ending lending for gotchi ID ${tokenId}: ${err.message}`))
+const listGotchiLendings = (tokenIds) => submitTransaction(tokenIds, createAddLendingTransaction).catch((err) => log(`Error creating listing for gotchi IDs ${tokenIds}: ${err.message}`))
+const endGotchiLendings = (tokenIds) => submitTransaction(tokenIds, createEndLendingTransaction).catch((err) => log(`Error ending lending for gotchi IDs ${tokenIds}: ${err.message}`))
+const relistGotchiLendings = (tokenIds) => submitTransaction(tokenIds, createRelistLendingTransaction).catch((err) => log(`Error relisting lending for gotchi IDs ${tokenIds}: ${err.message}`))
+const cancelGotchiLendings = (tokenIds) => submitTransaction(tokenIds, createCancelLendingTransaction).catch((err) => log(`Error canceling lending for gotchi IDs ${tokenIds}: ${err.message}`))
+
+const isGotchiIDOnLendingList = (id) => GOTCHI_IDS.includes(id)
 
 const loop = async () => {
-  log(`Getting gotchis owned by ${LENDER_WALLET_ADDRESS}`)
-  const gotchiIds = await getGotchisByOwner(LENDER_WALLET_ADDRESS).then(getIdsFromGotchis)
-  log(`gotchiIds=${gotchiIds}`)
-  const lendings = await getGotchiLendings(LENDER_WALLET_ADDRESS)
+  log(`LENDER_WALLET_ADDRESS=${LENDER_WALLET_ADDRESS}`)
+  log(`GOTCHI_IDS=${GOTCHI_IDS}`)
+  log(`Getting list of all gotchis owned by ${OWNER_WALLET_ADDRESS}`)
+  const ownedGotchiIds = await getGotchisByOwner(OWNER_WALLET_ADDRESS).then(getIdsFromGotchis)
+  log(`ownedGotchiIds=${ownedGotchiIds}`)
+  const lendings = await getGotchiLendings(OWNER_WALLET_ADDRESS)
   const idsOfLoanedGotchis = getGotchiIdsFromLendings(lendings)
   log(`idsOfLoanedGotchis=${idsOfLoanedGotchis}`)
-  const idsOfListedGotchis = await getGotchiLendingListings(LENDER_WALLET_ADDRESS).then(getGotchiIdsFromLendings)
+  const idsOfListedGotchis = await getGotchiLendingListings(OWNER_WALLET_ADDRESS).then(getGotchiIdsFromLendings)
   log(`idsOfListedGotchis=${idsOfListedGotchis}`)
   const idsOfGotchisWithLoanPeriodExpired = getGotchiIdsFromLendings(lendings.filter(isLoanPeriodExpired))
   log(`idsOfGotchisWithLoanPeriodExpired=${idsOfGotchisWithLoanPeriodExpired}`)
   lendings.forEach((l)=>log(`tokenId=${l['erc721TokenId']}, timeAgreed=${l['timeAgreed']}, period=${l['period']}, expireTime=${parseInt(l['timeAgreed']) + parseInt(l['period'])}, now=${Math.floor(Date.now() / 1000)}, expired=${isLoanPeriodExpired(l)}`))
-  const idsOfUnlistedGotchis = gotchiIds.filter((id) => !(idsOfListedGotchis.includes(id)) && !(idsOfLoanedGotchis.includes(id)))
+  const idsOfUnlistedGotchis = ownedGotchiIds.filter((id) => !(idsOfListedGotchis.includes(id)) && !(idsOfLoanedGotchis.includes(id)))
   log(`idsOfUnlistedGotchis=${idsOfUnlistedGotchis}`)
-  
+  const idsOfGotchisToList = idsOfUnlistedGotchis.filter(isGotchiIDOnLendingList)
+  log(`idsOfGotchisToList=${idsOfGotchisToList}`)
+  const idsOfGotchisToRelist = idsOfGotchisWithLoanPeriodExpired.filter(isGotchiIDOnLendingList)
+  log(`idsOfGotchisToRelist=${idsOfGotchisToRelist}`)
+
   if (OFFLINE_MODE) {
     log('Offline mode is enabled, no transactions will be sent.')
     return
   }
 
-  // list the unlisted gotchis
-  idsOfUnlistedGotchis.forEach(listGotchiLending)
-  // claim and end the expired gotchis
-  idsOfGotchisWithLoanPeriodExpired.forEach(endGotchiLending)
+  if (CANCEL_ONLY) {
+    const idsOfGotchisToCancel = idsOfListedGotchis.filter(isGotchiIDOnLendingList)
+    if (idsOfGotchisToCancel.length > 0)
+      cancelGotchiLendings(idsOfGotchisToCancel)
+  }
+
+  if (END_ONLY) {
+    const idsOfGotchisToEnd = idsOfGotchisWithLoanPeriodExpired.filter(isGotchiIDOnLendingList)
+    if (idsOfGotchisToEnd.length > 0)
+      endGotchiLendings(idsOfGotchisToEnd)
+  }
+
+  if (!CANCEL_ONLY && !END_ONLY) {
+    // list the unlisted gotchis
+    if (idsOfGotchisToList.length > 0)
+      listGotchiLendings(idsOfGotchisToList)
+    // relist the expired gotchis
+    if (idsOfGotchisToRelist.length > 0)
+      relistGotchiLendings(idsOfGotchisToRelist)
+  }
 
 }
-loop().then(() => setInterval(loop, MILLISECONDS_BETWEEN_RETRIES))
+loop().then(() => { if (!RUN_ONCE) setInterval(loop, MILLISECONDS_BETWEEN_RETRIES) } )
