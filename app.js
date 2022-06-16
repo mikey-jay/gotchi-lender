@@ -3,6 +3,9 @@ require('dotenv').config();
 // Can be 'safeLow', 'standard', or 'fast' - see: https://gasstation-mainnet.matic.network/v2
 const GAS_SPEED = 'standard'
 
+// In offline mode, no transactions are sent to the blockchain
+const OFFLINE_MODE = false
+
 // Abort the operation if estimated gas exceeds this limit, specified in MATIC
 const GAS_COST_LIMIT_MATIC = 0.05
 
@@ -146,6 +149,11 @@ const loop = async () => {
   const idsOfUnlistedGotchis = gotchiIds.filter((id) => !(idsOfListedGotchis.includes(id)) && !(idsOfLoanedGotchis.includes(id)))
   log(`idsOfUnlistedGotchis=${idsOfUnlistedGotchis}`)
   
+  if (OFFLINE_MODE) {
+    log('Offline mode is enabled, no transactions will be sent.')
+    return
+  }
+
   // list the unlisted gotchis
   idsOfUnlistedGotchis.forEach(listGotchiLending)
   // claim and end the expired gotchis
