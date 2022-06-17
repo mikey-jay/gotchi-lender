@@ -3,11 +3,8 @@ require('dotenv').config();
 // Can be 'safeLow', 'standard', or 'fast' - see: https://gasstation-mainnet.matic.network/v2
 const GAS_SPEED = 'standard'
 
-// In offline mode, no transactions are sent to the blockchain
-const OFFLINE_MODE = false
-
 // Abort the operation if estimated gas exceeds this limit, specified in MATIC
-const GAS_COST_LIMIT_MATIC = 0.05
+const GAS_COST_LIMIT_MATIC = 0.25
 
 const ABI = require('./abi.js')
 const POLYGON_RPC_HOST = "https://polygon-rpc.com/"
@@ -36,9 +33,18 @@ const MAX_LENDINGS = 2
 
 const MILLISECONDS_BETWEEN_RETRIES = 1000 * 60 * 2 // 2 minutes
 
+
+// cancel only mode - just cancel any current listings matching the config gotchi ids
 const CANCEL_ONLY = process.argv.includes('--cancel')
+
+// end only mode - just claim and end any current lendings matching the config gotchi ids
 const END_ONLY = process.argv.includes('--end')
+
+// run once mode - runs once and then exits
 const RUN_ONCE = process.argv.includes('--once') || CANCEL_ONLY || END_ONLY
+
+// In offline mode, no transactions are sent to the blockchain
+const OFFLINE_MODE = process.argv.includes('--offline')
 
 const getLogTimestamp = () => (new Date()).toISOString().substring(0,19)
 const log = (message) => console.log(`${getLogTimestamp()}: ${message}`)
@@ -124,7 +130,7 @@ const createBatchEndLendingTransaction = async (tokenIds) => {
   return {
     from: LENDER_WALLET_ADDRESS,
     to: AAVEGOTCHI_DIAMOND_ADDRESS,
-    data: contract.methods.batchCancelGotchiLendingByToken(tokenIds).encodeABI()
+    data: contract.methods.batchClaimAndEndGotchiLending(tokenIds).encodeABI()
   }
 }
 
@@ -142,7 +148,7 @@ const createBatchCancelLendingTransaction = async (tokenIds) => {
   return {
     from: LENDER_WALLET_ADDRESS,
     to: AAVEGOTCHI_DIAMOND_ADDRESS,
-    data: contract.methods.batchClaimAndEndGotchiLending(tokenIds).encodeABI()
+    data: contract.methods.batchCancelGotchiLendingByToken(tokenIds).encodeABI()
   }
 }
 
@@ -205,6 +211,10 @@ const cancelGotchiLendings = (tokenIds) => submitTransaction(tokenIds, createCan
 
 const isGotchiIDOnLendingList = (id) => GOTCHI_IDS.includes(id)
 
+let gotchiIDsListedByScript = []
+const gotchiHasBeenListedByScript = (id) => gotchiIDsListedByScript.includes(id)
+const gotchiHasntBeenListedByScript = (id) => !gotchiHasBeenListedByScript(id)
+
 const loop = async () => {
   log(`LENDER_WALLET_ADDRESS=${LENDER_WALLET_ADDRESS}`)
   log(`GOTCHI_IDS=${GOTCHI_IDS}`)
@@ -223,7 +233,9 @@ const loop = async () => {
   log(`idsOfUnlistedGotchis=${idsOfUnlistedGotchis}`)
   const idsOfGotchisToList = idsOfUnlistedGotchis.filter(isGotchiIDOnLendingList)
   log(`idsOfGotchisToList=${idsOfGotchisToList}`)
-  const idsOfGotchisToRelist = idsOfGotchisWithLoanPeriodExpired.filter(isGotchiIDOnLendingList)
+  const idsOfGotchisToClaimAndEnd = idsOfGotchisWithLoanPeriodExpired.filter(isGotchiIDOnLendingList).filter(gotchiHasntBeenListedByScript)
+  log(`idsOfGotchisToClaimAndEnd=${idsOfGotchisToClaimAndEnd}`)
+  const idsOfGotchisToRelist = idsOfGotchisWithLoanPeriodExpired.filter(isGotchiIDOnLendingList).filter(gotchiHasBeenListedByScript)
   log(`idsOfGotchisToRelist=${idsOfGotchisToRelist}`)
 
   if (OFFLINE_MODE) {
@@ -245,9 +257,14 @@ const loop = async () => {
 
   if (!CANCEL_ONLY && !END_ONLY) {
     // list the unlisted gotchis
-    if (idsOfGotchisToList.length > 0)
+    if (idsOfGotchisToList.length > 0) {
       listGotchiLendings(idsOfGotchisToList)
-    // relist the expired gotchis
+      gotchiIDsListedByScript = gotchiIDsListedByScript.concat(idsOfGotchisToList)
+    }
+    // claim and end the gotchis the script hasn't listed
+    if (idsOfGotchisToClaimAndEnd.length > 0)
+      endGotchiLendings(idsOfGotchisToClaimAndEnd)
+    // relist the gotchis the script has listed previously
     if (idsOfGotchisToRelist.length > 0)
       relistGotchiLendings(idsOfGotchisToRelist)
   }
