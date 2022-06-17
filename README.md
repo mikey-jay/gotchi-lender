@@ -12,11 +12,11 @@ npm install
 
 ## Creating the Configuration File
 The script needs a file named `.env` with configuration details specified. You can copy the example file (.env.example) provided as a starting template (ie: `cp .env.example .env`). See below for documentation on the various configuration parameters.
-- LENDER_WALLET_ADDRESS - (require) the address of the wallet holding the gotchis to be lent out
+- LENDER_WALLET_ADDRESS - (require) the address of a wallet with lending operator permissions to the gotchis to be lent out
 - LENDER_WALLET_KEY - (required) the private key of the lender wallet
 - GOTCHI_IDS - (required) a comma separated list of gotchi ID's (ie: `12736,827,19873`)
 - WHITELIST_ID - (optional)
-- ORIGINAL_OWNER_WALLET_ADDRESS - (optional) address to send owner's share of earnings - same as lender's address if not specified
+- ORIGINAL_OWNER_WALLET_ADDRESS - (optional) address of the gotchi owner (can be same as lender wallet, but not recommended)
 - THIRD_PARTY_WALLET_ADDRESS - (optional) required if THIRD_PARTY_SPLIT > 0
 - UPFRONT_COST - (required) upfront cost, in GHST
 - PERIOD_HRS - (required) loan duration, in hours
