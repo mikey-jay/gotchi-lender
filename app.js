@@ -7,7 +7,7 @@ const GAS_SPEED = 'standard'
 const GAS_COST_LIMIT_MATIC = 0.25
 
 const ABI = require('./abi.js')
-const POLYGON_RPC_HOST = "https://polygon-rpc.com/"
+const POLYGON_RPC_HOST = process.env.POLYGON_RPC_HOST || "https://polygon-rpc.com/"
 const POLYGON_GAS_STATION_HOST = "https://gasstation-mainnet.matic.network/v2"
 const AAVEGOTCHI_DIAMOND_ADDRESS = "0x86935F11C86623deC8a25696E1C19a8659CbF95d"
 

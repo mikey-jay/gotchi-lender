@@ -23,6 +23,7 @@ The script needs a file named `.env` with configuration details specified. You c
 - BORROWER_SPLIT - (required) borrower's share of the earnings, in % * 100 terms (ie: 70 means 70 percent share)
 - OWNER_SPLIT - (required) similar to borrower split, but for owner
 - THIRD_PARTY_SPLIT - (required) similar to borrower split, but for owner, if greater than 0, must also specify a THIRD_PARTY_WALLET_ADDRESS
+- POLYGON_RPC_HOST - (optional) use a different polygon RPC host (defaults to https://polygon-rpc.com)
 
 ## Running the Script
 The script can be run with the command:
