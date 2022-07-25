@@ -16,7 +16,7 @@ The script needs a file named `.env` with configuration details specified. You c
 - LENDER_WALLET_KEY - (required) the private key of the lender wallet
 - GOTCHI_IDS - (required) a comma separated list of gotchi ID's (ie: `12736,827,19873`)
 - WHITELIST_ID - (optional)
-- ORIGINAL_OWNER_WALLET_ADDRESS - (optional) address of the gotchi owner (can be same as lender wallet, but not recommended)
+- ORIGINAL_OWNER_WALLET_ADDRESS - (required if LENDER_WALLET_ADDRESS is not the owner of the gotchis) address of the gotchi owner
 - THIRD_PARTY_WALLET_ADDRESS - (optional) required if THIRD_PARTY_SPLIT > 0
 - UPFRONT_COST - (required) upfront cost, in GHST
 - PERIOD_HRS - (required) loan duration, in hours
