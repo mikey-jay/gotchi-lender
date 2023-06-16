@@ -8,7 +8,7 @@ const GAS_COST_LIMIT_MATIC = 0.25
 
 const ABI = require('./abi.js')
 const POLYGON_RPC_HOST = process.env.POLYGON_RPC_HOST || "https://polygon-rpc.com/"
-const POLYGON_GAS_STATION_HOST = "https://gasstation-mainnet.matic.network/v2"
+const POLYGON_GAS_STATION_HOST = "https://gasstation.polygon.technology/v2"
 const AAVEGOTCHI_DIAMOND_ADDRESS = "0x86935F11C86623deC8a25696E1C19a8659CbF95d"
 
 const LENDER_WALLET_ADDRESS = process.env.LENDER_WALLET_ADDRESS
@@ -61,21 +61,16 @@ const convertGweiToWei = (gwei) => gwei * (10 ** 9)
 const convertWeiToMatic = (wei) => wei / (10 ** 18)
 
 const getCurrentGasPrices = () => new Promise((resolve, reject) => {
-  const https = require('https')
-  https.get(POLYGON_GAS_STATION_HOST, (res) =>{
-    const { statusCode } = res
-    let rawData = ''
-    res.on('data', (chunk) => rawData += chunk)
-    res.on('end', () => {
-      const gasData = JSON.parse(rawData)
+  fetch(POLYGON_GAS_STATION_HOST)
+    .then(response => response.json())
+    .then(gasData => {
       if (gasData['error'])
         reject(new Error(`Polygon gas station error: ${gasData.error.message}`))
       else if (typeof gasData[GAS_SPEED] == 'undefined')
-        reject(new Error(`Polygon gas station response does not include any data for gas speed '${GAS_SPEED}' (rawData=${rawData})`))
+        reject(new Error(`Polygon gas station response does not include any data for gas speed '${GAS_SPEED}' (response=${JSON.stringify(gasData)})`))
       else
         resolve(gasData)
     })
-  })
 })
 
 const createAddLendingTransaction = async (tokenIds, initialCost = UPFRONT_COST_WEI, periodSeconds = PERIOD_SECS, revenueSplit = [OWNER_SPLIT, BORROWER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => {
