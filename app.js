@@ -61,6 +61,7 @@ const convertGweiToWei = (gwei) => gwei * (10 ** 9)
 const convertWeiToMatic = (wei) => wei / (10 ** 18)
 
 const getCurrentGasPrices = () => new Promise((resolve, reject) => {
+  const fetch = require('node-fetch');
   fetch(POLYGON_GAS_STATION_HOST)
     .then(response => response.json())
     .then(gasData => {
