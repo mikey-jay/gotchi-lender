@@ -24,6 +24,7 @@ The script needs a file named `.env` with configuration details specified. You c
 - OWNER_SPLIT - (required) similar to borrower split, but for owner
 - THIRD_PARTY_SPLIT - (required) similar to borrower split, but for owner, if greater than 0, must also specify a THIRD_PARTY_WALLET_ADDRESS
 - POLYGON_RPC_HOST - (optional) use a different polygon RPC host (defaults to https://polygon-rpc.com)
+- ALLOW_CHANNELING - (optional) set to *true* if you want borrowers to be able to channel alchemica
 
 ## Running the Script
 The script can be run with the command:

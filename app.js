@@ -28,6 +28,8 @@ const ALCHEMICA_FOMO_ADDRESS = '0x44A6e0BE76e1D9620A7F76588e4509fE4fa8E8C8'
 const ALCHEMICA_ALPHA_ADDRESS = '0x6a3E7C3c6EF65Ee26975b12293cA1AAD7e1dAeD2'
 const ALCHEMICA_KEK_ADDRESS = '0x42E5E06EF5b90Fe15F853F59299Fc96259209c5C'
 const REVENUE_TOKENS = [ALCHEMICA_FUD_ADDRESS, ALCHEMICA_FOMO_ADDRESS, ALCHEMICA_ALPHA_ADDRESS, ALCHEMICA_KEK_ADDRESS]
+const ALLOW_CHANNELING = process.env.ALLOW_CHANNELING.toLowerCase() === 'true' || false
+const PERMISSIONS_BITMAP = ALLOW_CHANNELING ? '0x00000000000000000000000000000001' : '0x00000000000000000000000000000000'
 
 const MAX_LENDINGS = 999
 
@@ -76,17 +78,17 @@ const getCurrentGasPrices = () => new Promise((resolve, reject) => {
 
 const createAddLendingTransaction = async (tokenIds, initialCost = UPFRONT_COST_WEI, periodSeconds = PERIOD_SECS, revenueSplit = [OWNER_SPLIT, BORROWER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => {
   if (tokenIds.length > 1)
-    return createBatchAddLendingTransaction(tokenIds, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens)
+      return createBatchAddLendingTransaction(tokenIds, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens);
   
   return {
-    from: LENDER_WALLET_ADDRESS,
-    to: AAVEGOTCHI_DIAMOND_ADDRESS,
-    data: contract.methods.addGotchiLending(tokenIds[0], initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens).encodeABI()
-  }
+      from: LENDER_WALLET_ADDRESS,
+      to: AAVEGOTCHI_DIAMOND_ADDRESS,
+      data: contract.methods.addGotchiLending(tokenIds[0], initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens, PERMISSIONS_BITMAP).encodeABI()
+  };
 }
 
 const createBatchAddLendingTransaction = async (tokenIds, initialCost = UPFRONT_COST_WEI, periodSeconds = PERIOD_SECS, revenueSplit = [OWNER_SPLIT, BORROWER_SPLIT, THIRD_PARTY_SPLIT], originalOwner = OWNER_WALLET_ADDRESS, thirdParty = THIRD_PARTY_WALLET_ADDRESS, whitelistId = WHITELIST_ID, revenueTokens = REVENUE_TOKENS) => {
-  let args = tokenIds.map((t) => [t, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens])
+  let args = tokenIds.map((t) => [t, initialCost, periodSeconds, revenueSplit, originalOwner, thirdParty, whitelistId, revenueTokens, PERMISSIONS_BITMAP]);
   return {
     from: LENDER_WALLET_ADDRESS,
     to: AAVEGOTCHI_DIAMOND_ADDRESS,
